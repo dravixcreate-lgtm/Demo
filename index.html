@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Doctor Website</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+color:#fff;
+overflow-x:hidden;
+scroll-behavior:smooth;
+}
+section{
+min-height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+padding:40px 20px;
+opacity:0;
+transform:translateY(60px);
+transition:1s ease;
+}
+section.active{
+opacity:1;
+transform:translateY(0);
+}
+.glass{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(12px);
+border-radius:20px;
+padding:30px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+h1,h2{margin-bottom:20px;text-align:center;}
+
+button{
+padding:12px 30px;
+border:2px solid #00f2ff;
+background:transparent;
+color:#00f2ff;
+border-radius:30px;
+cursor:pointer;
+transition:.4s;
+position:relative;
+overflow:hidden;
+}
+button:hover{
+background:#00f2ff;
+color:#000;
+box-shadow:0 0 20px #00f2ff;
+transform:scale(1.05);
+}
+button:active{
+transform:scale(0.95);
+}
+
+.ripple{
+position:absolute;
+border-radius:50%;
+transform:scale(0);
+animation:ripple 600ms linear;
+background:rgba(255,255,255,0.5);
+}
+@keyframes ripple{
+to{
+transform:scale(4);
+opacity:0;
+}
+}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+width:100%;
+max-width:1000px;
+}
+.card{
+padding:25px;
+border-radius:20px;
+background:rgba(255,255,255,0.1);
+transition:.5s;
+transform-style:preserve-3d;
+}
+.card:hover{
+transform:rotateY(10deg) rotateX(10deg) scale(1.05);
+box-shadow:0 0 30px #00f2ff;
+}
+
+form{
+display:flex;
+flex-direction:column;
+gap:15px;
+width:100%;
+max-width:400px;
+}
+input,textarea{
+padding:12px;
+border-radius:10px;
+border:none;
+outline:none;
+}
+
+.admin{
+display:none;
+flex-direction:column;
+gap:10px;
+max-width:600px;
+}
+
+canvas{
+position:absolute;
+top:0;
+left:0;
+z-index:-1;
+}
+
+@media(max-width:768px){
+h1{font-size:24px;}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<!-- HERO -->
+<section id="home">
+<h1>Advanced Care. Trusted Expertise.</h1>
+<p>Premium Healthcare Experience</p>
+<br>
+<button onclick="scrollToSection('booking')">Book Appointment</button>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+<h2>Our Services</h2>
+<div class="cards">
+<div class="card">Cardiology</div>
+<div class="card">Diabetes Care</div>
+<div class="card">Surgery Consultation</div>
+<div class="card">Emergency Care</div>
+</div>
+</section>
+
+<!-- BOOKING -->
+<section id="booking">
+<h2>Book Appointment</h2>
+<div class="glass">
+<form id="appointmentForm">
+<input type="text" placeholder="Full Name" required>
+<input type="email" placeholder="Email" required>
+<input type="date" required>
+<textarea placeholder="Symptoms" required></textarea>
+<button type="submit">Confirm Booking</button>
+</form>
+</div>
+</section>
+
+<!-- ADMIN -->
+<section id="adminSection">
+<h2>Admin Dashboard</h2>
+<button onclick="toggleAdmin()">Login as Admin</button>
+<div class="admin" id="adminPanel">
+<h3>Appointments</h3>
+<div id="appointments"></div>
+</div>
+</section>
+
+<script>
+// 3D Background (Three.js)
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('bg'),alpha:true});
+renderer.setSize(window.innerWidth,window.innerHeight);
+camera.position.z=5;
+
+const geometry=new THREE.TorusKnotGeometry(1,0.3,100,16);
+const material=new THREE.MeshBasicMaterial({color:0x00f2ff,wireframe:true});
+const knot=new THREE.Mesh(geometry,material);
+scene.add(knot);
+
+function animate(){
+requestAnimationFrame(animate);
+knot.rotation.x+=0.01;
+knot.rotation.y+=0.01;
+renderer.render(scene,camera);
+}
+animate();
+
+// Scroll Animation
+const sections=document.querySelectorAll("section");
+window.addEventListener("scroll",()=>{
+sections.forEach(sec=>{
+const top=sec.getBoundingClientRect().top;
+if(top<window.innerHeight-100){
+sec.classList.add("active");
+}
+});
+});
+
+// Ripple Effect
+document.querySelectorAll("button").forEach(btn=>{
+btn.addEventListener("click",function(e){
+const circle=document.createElement("span");
+circle.classList.add("ripple");
+const rect=this.getBoundingClientRect();
+circle.style.left=e.clientX-rect.left+"px";
+circle.style.top=e.clientY-rect.top+"px";
+this.appendChild(circle);
+setTimeout(()=>circle.remove(),600);
+});
+});
+
+// ScrollTo
+function scrollToSection(id){
+document.getElementById(id).scrollIntoView({behavior:"smooth"});
+}
+
+// Booking System (Local Backend)
+document.getElementById("appointmentForm").addEventListener("submit",function(e){
+e.preventDefault();
+const data={
+name:this[0].value,
+email:this[1].value,
+date:this[2].value,
+symptoms:this[3].value
+};
+let appointments=JSON.parse(localStorage.getItem("appointments"))||[];
+appointments.push(data);
+localStorage.setItem("appointments",JSON.stringify(appointments));
+alert("Appointment Booked Successfully!");
+this.reset();
+});
+
+// Admin Panel
+function toggleAdmin(){
+const panel=document.getElementById("adminPanel");
+panel.style.display=panel.style.display==="flex"?"none":"flex";
+loadAppointments();
+}
+
+function loadAppointments(){
+let appointments=JSON.parse(localStorage.getItem("appointments"))||[];
+let container=document.getElementById("appointments");
+container.innerHTML="";
+appointments.forEach((a,i)=>{
+container.innerHTML+=`
+<div class="glass">
+<p><b>Name:</b> ${a.name}</p>
+<p><b>Email:</b> ${a.email}</p>
+<p><b>Date:</b> ${a.date}</p>
+<p><b>Symptoms:</b> ${a.symptoms}</p>
+<button onclick="deleteAppointment(${i})">Delete</button>
+</div><br>
+`;
+});
+}
+
+function deleteAppointment(i){
+let appointments=JSON.parse(localStorage.getItem("appointments"))||[];
+appointments.splice(i,1);
+localStorage.setItem("appointments",JSON.stringify(appointments));
+loadAppointments();
+}
+
+// Resize
+window.addEventListener("resize",()=>{
+renderer.setSize(window.innerWidth,window.innerHeight);
+camera.aspect=window.innerWidth/window.innerHeight;
+camera.updateProjectionMatrix();
+});
+</script>
+
+</body>
+</html>
